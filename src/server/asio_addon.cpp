@@ -19,6 +19,7 @@
 
 #include <opc/ua/server/addons/asio_addon.h>
 
+#include <boost/version.hpp>
 #include <boost/asio.hpp>
 
 #include <algorithm>
@@ -31,7 +32,11 @@ class AsioAddonImpl : public OpcUa::Server::AsioAddon
 {
 public:
   AsioAddonImpl()
+#if BOOST_VERSION < 106600
     : Work(IoService)
+#else
+    : Work(boost::asio::make_work_guard(IoService))
+#endif
   {
   }
 
@@ -86,7 +91,11 @@ public:
 
 private:
   boost::asio::io_service IoService;
+#if BOOST_VERSION < 106600
   boost::asio::io_service::work Work;
+#else
+  boost::asio::executor_work_guard<boost::asio::io_service::executor_type> Work;
+#endif
   std::vector<std::thread> Threads;
 };
 }

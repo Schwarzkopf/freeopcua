@@ -31,6 +31,7 @@
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/x509_crt.h>
 #include <mbedtls/error.h>
+#include <mbedtls/version.h>
 #endif
 
 namespace OpcUa
@@ -545,12 +546,22 @@ void UaClient::EncryptPassword(OpcUa::UserIdentifyToken &identity, const CreateS
       }
       {
         mbedtls_rsa_context *rsa = mbedtls_pk_rsa(x509.pk);
+#if MBEDTLS_VERSION_NUMBER >= 0x03000000
+        ret = mbedtls_rsa_set_padding( rsa, MBEDTLS_RSA_PKCS_V21, MBEDTLS_MD_SHA1 );
+        if( ret != 0 ) {
+          LOG_ERROR(Logger, "ua_client             | error setting RSA padding {}", error2string(ret) );
+          goto exit2;
+        }
+        const size_t rsaLen = mbedtls_rsa_get_len( rsa );
+#else
         rsa->padding = MBEDTLS_RSA_PKCS_V21;
         rsa->hash_id = MBEDTLS_MD_SHA1;
+        const size_t rsaLen = rsa->len;
+#endif
 
         LOG_DEBUG(Logger, "ua_client             | generating the RSA encrypted value...");
 
-        unsigned char buff[rsa->len];
+        std::vector<unsigned char> buff(rsaLen);
         std::string input = identity.UserName.Password;
         input += std::string(response.Parameters.ServerNonce.Data.begin(), response.Parameters.ServerNonce.Data.end());
         {
@@ -564,14 +575,18 @@ void UaClient::EncryptPassword(OpcUa::UserIdentifyToken &identity, const CreateS
           input = sn + input;
         }
 
-        ret = mbedtls_rsa_pkcs1_encrypt( rsa, mbedtls_ctr_drbg_random, &ctr_drbg, MBEDTLS_RSA_PUBLIC, input.size(), (const unsigned char*)input.data(), buff );
+#if MBEDTLS_VERSION_NUMBER >= 0x03000000
+        ret = mbedtls_rsa_pkcs1_encrypt( rsa, mbedtls_ctr_drbg_random, &ctr_drbg, input.size(), (const unsigned char*)input.data(), buff.data() );
+#else
+        ret = mbedtls_rsa_pkcs1_encrypt( rsa, mbedtls_ctr_drbg_random, &ctr_drbg, MBEDTLS_RSA_PUBLIC, input.size(), (const unsigned char*)input.data(), buff.data() );
+#endif
         if( ret != 0 ) {
           LOG_ERROR(Logger, "ua_client             | error RSA encryption {}", error2string(ret) );
           goto exit2;
         }
-        LOG_DEBUG(Logger, "ua_client             | encrypted password: {}", hex(std::vector<unsigned char>(buff, buff + sizeof(buff))));
+        LOG_DEBUG(Logger, "ua_client             | encrypted password: {}", hex(buff));
 
-        identity.UserName.Password = std::string((const char*)buff, rsa->len);
+        identity.UserName.Password = std::string((const char*)buff.data(), buff.size());
         identity.UserName.EncryptionAlgorithm = "http://www.w3.org/2001/04/xmlenc#rsa-oaep";
       }
 exit2:

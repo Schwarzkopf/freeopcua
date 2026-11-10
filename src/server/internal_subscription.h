@@ -12,6 +12,7 @@
 #include <opc/ua/services/attributes.h>
 
 #include <boost/asio.hpp>
+#include <boost/asio/deadline_timer.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <chrono>
 #include <iostream>

@@ -29,6 +29,7 @@
 #include <opc/ua/protocol/input_from_buffer.h>
 
 #include <array>
+#include <boost/version.hpp>
 #include <boost/asio.hpp>
 #include <future>
 #include <iostream>
@@ -313,12 +314,20 @@ OpcTcpServer::OpcTcpServer(const AsyncOpcTcp::Parameters & params, Services::Sha
 
   else if (params.Host == "localhost")
     {
+#if BOOST_VERSION < 106600
       ep = tcp::endpoint(ip::address::from_string("127.0.0.1"), params.Port);
+#else
+      ep = tcp::endpoint(ip::make_address("127.0.0.1"), params.Port);
+#endif
     }
 
   else
     {
+#if BOOST_VERSION < 106600
       ep = tcp::endpoint(ip::address::from_string(params.Host), params.Port);
+#else
+      ep = tcp::endpoint(ip::make_address(params.Host), params.Port);
+#endif
     }
 
   acceptor.open(ep.protocol());
@@ -330,7 +339,7 @@ void OpcTcpServer::Listen()
 {
   LOG_DEBUG(Logger, "opc_tcp_async         | running server");
 
-  LOG_DEBUG(Logger, "opc_tcp_async         | waiting for client connection at: {}:{}", acceptor.local_endpoint().address(), acceptor.local_endpoint().port());
+  LOG_DEBUG(Logger, "opc_tcp_async         | waiting for client connection at: {}:{}", acceptor.local_endpoint().address().to_string(), acceptor.local_endpoint().port());
   acceptor.listen();
 
   Accept();

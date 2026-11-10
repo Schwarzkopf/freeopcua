@@ -130,7 +130,13 @@ if(UNIX)
     endif()
 endif()
 
-find_package( Boost COMPONENTS system program_options filesystem thread REQUIRED )
+# Boost.System is header-only since 1.69 and its stub library was removed in 1.89,
+# so only request it as a component on old Boost versions.
+find_package( Boost REQUIRED )
+if("${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}" VERSION_LESS "1.69")
+    set(BOOST_SYSTEM_COMPONENT system)
+endif()
+find_package( Boost COMPONENTS ${BOOST_SYSTEM_COMPONENT} program_options filesystem thread REQUIRED )
 include_directories( ${Boost_INCLUDE_DIRS} )
 link_directories( ${Boost_LIBRARY_DIRS} )
 message(STATUS "Boost INCLUDE DIR IS: " ${Boost_INCLUDE_DIRS})
