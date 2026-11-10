@@ -33,7 +33,7 @@ public:
   {
     std::vector<ApplicationData> applications;
 
-    for (const Common::ParametersGroup subGroup : applicationGroups)
+    for (const Common::ParametersGroup & subGroup : applicationGroups)
       {
         Log("Found group : ", subGroup.Name);
 
@@ -217,7 +217,7 @@ private:
     Log("Parsing endpoint parameters.");
     EndpointDescription endpoint;
 
-    for (const Common::Parameter param : group.Parameters)
+    for (const Common::Parameter & param : group.Parameters)
       {
         Log("Param is: ", param.Name, " = ", param.Value);
 
@@ -240,7 +240,7 @@ private:
           { Log("Unknown endpoint parameter: ", param.Name, "=", param.Value); }
       }
 
-    for (const Common::ParametersGroup subGroup : group.Groups)
+    for (const Common::ParametersGroup & subGroup : group.Groups)
       {
         if (subGroup.Name == "user_token_policy")
           {
@@ -279,7 +279,7 @@ private:
     Log("Parsing application parameters.");
     ApplicationData data;
 
-    for (const Common::Parameter param : applicationGroup.Parameters)
+    for (const Common::Parameter & param : applicationGroup.Parameters)
       {
         Log("Parsing app paramter ", param.Name, " = ", param.Value);
 
@@ -319,7 +319,7 @@ private:
           }
       }
 
-    for (const Common::ParametersGroup group : applicationGroup.Groups)
+    for (const Common::ParametersGroup & group : applicationGroup.Groups)
       {
         Log("parsing group ", group.Name);
 

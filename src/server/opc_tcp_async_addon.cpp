@@ -74,7 +74,7 @@ void AsyncOpcTcpAddon::Initialize(Common::AddonsManager & addons, const Common::
   std::vector<OpcUa::ApplicationDescription> applicationDescriptions;
   std::vector<OpcUa::EndpointDescription> endpointDescriptions;
 
-  for (const OpcUa::Server::ApplicationData application : applications)
+  for (const OpcUa::Server::ApplicationData & application : applications)
     {
       applicationDescriptions.push_back(application.Application);
       endpointDescriptions.insert(endpointDescriptions.end(), application.Endpoints.begin(), application.Endpoints.end());
